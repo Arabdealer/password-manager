@@ -7,15 +7,17 @@ const Manager = ({ passwords, setPasswords }) => {
   const [website, setWebsite] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-   const getPasswords = async () => {
-      const response = await fetch("http://localhost:3000/");
-      const data = await response.json();
+  const getPasswords = async () => {
+    const response = await fetch("http://localhost:3000/", {
+      credentials: "include",
+    });
+    const data = await response.json();
 
-      setPasswords(data);
-    };
-    useEffect(() => {
-      getPasswords();
-    }, []);
+    setPasswords(data);
+  };
+  useEffect(() => {
+    getPasswords();
+  }, []);
 
   const addPassword = async () => {
     console.log("Adding password:", { website, username, password });
@@ -30,6 +32,7 @@ const Manager = ({ passwords, setPasswords }) => {
     };
     const response = await fetch("http://localhost:3000/", {
       method: "POST",
+       credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },

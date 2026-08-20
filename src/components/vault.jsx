@@ -44,7 +44,9 @@ const Vault = ({ passwords, setPasswords }) => {
         }, 1500);
     };
     const getPasswords = async () => {
-  const response = await fetch("http://localhost:3000/");
+  const response = await fetch("http://localhost:3000/", {
+    credentials: "include",
+  });
   const data = await response.json();
 
   setPasswords(data);
@@ -57,6 +59,7 @@ useEffect(() => {
     const deletePassword = async (id) => {
         await fetch("http://localhost:3000/", {
             method: "DELETE",
+            credentials: "include",
             headers: {
                 "Content-Type": "application/json",
             },
@@ -94,6 +97,7 @@ useEffect(() => {
 
   const response = await fetch("http://localhost:3000/", {
     method: "PUT",
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
     },
