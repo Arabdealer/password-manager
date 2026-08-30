@@ -1,11 +1,29 @@
 
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { LockKeyhole, Home, Search, Vault } from "lucide-react";
 import { useState } from "react";
 
 const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        try {
+            const response = await fetch("http://localhost:3000/logout", {
+                method: "POST",
+                credentials: "include",
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                navigate("/login");
+            }
+        } catch (error) {
+            console.error("Logout failed:", error);
+        }
+    };
 
     return (
         <nav className="bg-[#080b1a] text-white shadow-lg border-b border-purple-900/30">
@@ -46,6 +64,13 @@ const Navbar = () => {
                         <Vault size={18} />
                         Vault
                     </Link>
+                    {/* Logout */}
+                    <button
+                        onClick={handleLogout}
+                        className="px-4 py-2.5 rounded-xl text-gray-300 hover:text-white hover:bg-purple-600/20 transition duration-200"
+                    >
+                        Logout
+                    </button>
 
                     {/* Search */}
                     <div className="flex items-center gap-3 bg-[#111528] border border-gray-700/50 rounded-xl px-4 py-2.5 focus-within:border-purple-500/60 transition duration-200">
