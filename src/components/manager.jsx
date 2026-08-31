@@ -32,7 +32,7 @@ const Manager = ({ passwords, setPasswords }) => {
     };
     const response = await fetch("http://localhost:3000/", {
       method: "POST",
-       credentials: "include",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
@@ -40,7 +40,11 @@ const Manager = ({ passwords, setPasswords }) => {
     });
     await getPasswords();
     toast.success("Password added !");
+    setWebsite("");
+    setUsername("");
+    setPassword("");
   };
+
 
 
   return (

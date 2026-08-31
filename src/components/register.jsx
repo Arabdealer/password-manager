@@ -3,28 +3,30 @@ import { Eye, EyeOff, LockKeyhole } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
-const Login = ({ setAuthenticated }) => {
+const Register = () => {
     const [showPassword, setShowPassword] = useState(false);
+    const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
     const navigate = useNavigate();
-    const handleLogin = async (e) => {
+
+    const handleRegister = async (e) => {
         e.preventDefault();
 
-        if (!email || !password) {
+        if (!name || !email || !password) {
             toast.error("Please fill in all fields!");
             return;
         }
 
         try {
-            const response = await fetch("http://localhost:3000/login", {
+            const response = await fetch("http://localhost:3000/register", {
                 method: "POST",
-                credentials: "include",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
+                    name,
                     email,
                     password,
                 }),
@@ -33,18 +35,20 @@ const Login = ({ setAuthenticated }) => {
             const data = await response.json();
 
             if (!response.ok) {
-                toast.error(data.message || "Login failed");
+                toast.error(data.message || "Registration failed");
                 return;
             }
 
-            toast.success("Login successful!");
-            setAuthenticated(true);
-            navigate("/home");
+            toast.success("Account created successfully!");
+
+            navigate("/login");
+
         } catch (error) {
             console.error(error);
             toast.error("Something went wrong. Please try again.");
         }
     };
+
     return (
         <main className="min-h-[calc(100vh-73px)] bg-[#080b1a] text-white flex items-center justify-center px-6 py-12">
 
@@ -63,18 +67,36 @@ const Login = ({ setAuthenticated }) => {
                 {/* Heading */}
                 <div className="text-center mb-8">
                     <h1 className="text-4xl font-bold tracking-tight">
-                        Welcome back
+                        Create your account
                     </h1>
 
                     <p className="text-gray-400 mt-3 text-sm md:text-base">
-                        Login to access your secure Sentra vault.
+                        Create an account to start using your secure Sentra vault.
                     </p>
                 </div>
 
-                {/* Login Card */}
+                {/* Register Card */}
                 <div className="bg-[#111528] border border-gray-800 rounded-2xl p-6 md:p-8 shadow-2xl">
 
-                    <form className="space-y-6" onSubmit={handleLogin}>
+                    <form
+                        className="space-y-6"
+                        onSubmit={handleRegister}
+                    >
+
+                        {/* Name */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                                Name
+                            </label>
+
+                            <input
+                                type="text"
+                                placeholder="Enter your name"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                className="w-full bg-[#080b1a] border border-gray-700 rounded-xl px-4 py-3.5 text-white placeholder-gray-600 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/10 transition"
+                            />
+                        </div>
 
                         {/* Email */}
                         <div>
@@ -101,10 +123,9 @@ const Login = ({ setAuthenticated }) => {
 
                                 <input
                                     type={showPassword ? "text" : "password"}
-                                    placeholder="Enter your password"
+                                    placeholder="Create a password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-
                                     className="w-full bg-[#080b1a] border border-gray-700 rounded-xl px-4 py-3.5 pr-12 text-white placeholder-gray-600 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/10 transition"
                                 />
 
@@ -123,35 +144,36 @@ const Login = ({ setAuthenticated }) => {
                             </div>
                         </div>
 
-                        {/* Login Button */}
+                        {/* Register Button */}
                         <button
                             type="submit"
                             className="w-full bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white font-semibold py-3.5 rounded-xl transition duration-200 shadow-lg shadow-purple-900/20"
                         >
-                            Login
+                            Create Account
                         </button>
 
                     </form>
 
-                    {/* Register */}
+                    {/* Login */}
                     <div className="text-center mt-7">
                         <p className="text-gray-400 text-sm">
-                            Don't have an account?{" "}
+                            Already have an account?{" "}
+
                             <button
                                 type="button"
-                                onClick={() => navigate("/register")}
+                                onClick={() => navigate("/login")}
                                 className="text-purple-400 hover:text-purple-300 font-medium transition"
                             >
-                                Create one
+                                Login
                             </button>
                         </p>
                     </div>
 
                 </div>
 
-                {/* Small Security Note */}
+                {/* Security Note */}
                 <p className="text-center text-gray-600 text-xs mt-6">
-                    Your credentials are protected with secure authentication.
+                    Your account is protected with secure authentication.
                 </p>
 
             </div>
@@ -160,4 +182,4 @@ const Login = ({ setAuthenticated }) => {
     );
 };
 
-export default Login;
+export default Register;
