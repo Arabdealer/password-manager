@@ -6,45 +6,62 @@ import Navbar from "./components/navbar";
 import Manager from "./components/manager";
 import Vault from "./components/vault";
 import Login from "./components/login";
+import Landing from "./components/landing";
 import ProtectedRoute from "./components/protectedroutes";
 
 function App() {
   const [passwords, setPasswords] = useState([]);
+  const [authenticated, setAuthenticated] = useState(false);
 
   return (
     <BrowserRouter>
       <Toaster />
-      <Navbar />
+
+      <Navbar
+        authenticated={authenticated}
+        setAuthenticated={setAuthenticated}
+      />
 
       <Routes>
+
+        {/* Public landing page */}
+        <Route path="/" element={<Landing />} />
+
+        {/* Login */}
         <Route
-          path="/"
+          path="/login"
           element={
-            <Manager
-              passwords={passwords}
-              setPasswords={setPasswords}
-            />
+            <Login setAuthenticated={setAuthenticated} />
           }
         />
 
+        {/* Protected Home / Manager */}
+        <Route
+          path="/home"
+          element={
+            <ProtectedRoute>
+              <Manager
+                passwords={passwords}
+                setPasswords={setPasswords}
+              />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Protected Vault */}
         <Route
           path="/vault"
           element={
             <ProtectedRoute>
-      <Vault
-        passwords={passwords}
-        setPasswords={setPasswords}
-      />
-    </ProtectedRoute>
+              <Vault
+                passwords={passwords}
+                setPasswords={setPasswords}
+              />
+            </ProtectedRoute>
           }
         />
 
-        <Route
-          path="/login"
-          element={<Login />}
-        />
       </Routes>
-
     </BrowserRouter>
   );
 }

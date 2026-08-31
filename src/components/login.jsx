@@ -3,7 +3,7 @@ import { Eye, EyeOff, LockKeyhole } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
-const Login = () => {
+const Login = ({ setAuthenticated }) => {
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -38,9 +38,8 @@ const Login = () => {
             }
 
             toast.success("Login successful!");
-
-            navigate("/vault");
-
+            setAuthenticated(true);
+            navigate("/home");
         } catch (error) {
             console.error(error);
             toast.error("Something went wrong. Please try again.");
@@ -68,7 +67,7 @@ const Login = () => {
                     </h1>
 
                     <p className="text-gray-400 mt-3 text-sm md:text-base">
-                        Login to access your secure PassOP vault.
+                        Login to access your secure Sentra vault.
                     </p>
                 </div>
 
@@ -105,7 +104,7 @@ const Login = () => {
                                     placeholder="Enter your password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    
+
                                     className="w-full bg-[#080b1a] border border-gray-700 rounded-xl px-4 py-3.5 pr-12 text-white placeholder-gray-600 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/10 transition"
                                 />
 
