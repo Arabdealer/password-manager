@@ -1,45 +1,54 @@
 # Sentra
 
-Sentra is a full-stack password manager built to explore authentication, protected routes, user-specific data, and CRUD operations in a modern web application.
-
-The application allows users to create an account, authenticate securely, and manage their saved credentials through a personal vault.
+Sentra is a full-stack password manager built with React, Node.js, Express, and MongoDB. The project focuses on authentication, protected routes, user-specific data, and secure credential management.
 
 ## Overview
 
 Sentra follows a client-server architecture:
 
-- The frontend is built with React and handles the UI, routing, authentication state, and user interactions.
-- The backend is built with Node.js and Express and exposes REST APIs for authentication and password management.
-- MongoDB is used for persistent data storage.
-- JWTs are used to maintain authenticated sessions.
-- bcrypt is used to hash user login passwords.
+- **Frontend:** React-based interface with client-side routing and shared application state.
+- **Backend:** Node.js and Express REST API for authentication and password management.
+- **Database:** MongoDB for storing user accounts and vault records.
+- **Authentication:** JWT-based authentication using HTTP-only cookies.
+- **Password Security:** bcrypt hashing for user account passwords.
 
-A core design goal of the project is **user-level data isolation**. Password records are associated with the authenticated user's unique MongoDB ID, ensuring CRUD operations are performed only on that user's records.
+A core part of Sentra is **user-level data isolation**. Each vault record is associated with the authenticated user's MongoDB ID, ensuring users can only access, update, or delete their own saved credentials.
 
 ## Features
 
 ### Authentication
 - User registration and login
-- Password hashing with bcrypt
-- JWT-based authentication using HTTP cookies
-- Authentication persistence across page reloads
+- bcrypt password hashing
+- JWT-based authentication
+- HTTP-only authentication cookies
 - Protected frontend routes
+- Backend authentication middleware
+- Authentication persistence across page reloads
 - Logout functionality
 
-### Password Management
+### Password Vault
 - Add saved credentials
 - View saved credentials
-- Edit existing credentials
-- Delete credentials
+- Edit saved credentials
+- Delete saved credentials
 - Show/hide password values
-- User-specific password records
+- User-specific vault records
+- Search-ready vault interface
+
+### Password Generator
+- Random password generation during account registration
+- Combination of uppercase and lowercase letters
+- Numbers and special characters
+- Option to use the generated password or enter a custom password
 
 ### Frontend
-- React-based component architecture
-- Client-side routing with React Router
-- Shared authentication state
-- Responsive UI
-- Toast notifications for user feedback
+- React component architecture
+- React Router for client-side navigation
+- Shared application state
+- Responsive interface
+- Toast notifications
+- Dark-themed UI with Tailwind CSS
+- Lucide React icons
 
 ## Tech Stack
 
@@ -59,12 +68,33 @@ A core design goal of the project is **user-level data isolation**. Password rec
 - Cookie Parser
 - CORS
 
-## Security Note
+## Security
 
-User login passwords are hashed using bcrypt, and authentication is handled using JWTs stored in HTTP cookies.
+Sentra uses different approaches for different types of credentials:
 
-Currently, saved vault passwords are **not encrypted at rest**. This is a known limitation of the current version and is planned for a future iteration.
+- User account passwords are hashed using **bcrypt** and are never stored as plaintext.
+- Authentication tokens are stored in **HTTP-only cookies**, preventing normal client-side JavaScript from directly accessing them.
+- Backend authentication middleware verifies the JWT before allowing access to protected API routes.
+- Vault records are associated with the authenticated user's unique MongoDB ID to enforce user-level access control.
 
-## Project Status
+### Current Limitation
 
-Sentra is an actively developed full-stack project focused on authentication, authorization, REST APIs, database operations, protected routes, and user-specific CRUD functionality.
+Vault passwords are currently stored as plaintext in the database. Encryption of vault credentials is planned as a future security improvement.
+
+## Project Architecture
+
+```text
+React Frontend
+      │
+      │ HTTP / REST API
+      ▼
+Node.js + Express
+      │
+      ├── Authentication
+      │     ├── bcrypt
+      │     └── JWT + HTTP-only Cookie
+      │
+      └── Password Management
+             │
+             ▼
+          MongoDB
