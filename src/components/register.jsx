@@ -8,8 +8,24 @@ const Register = () => {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [suggestedPassword, setSuggestedPassword] = useState("");
 
     const navigate = useNavigate();
+
+    // Generate a random password
+    const generatePassword = () => {
+        const char =
+            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=~`";
+
+        let generatedPassword = "";
+
+        for (let i = 0; i < 8; i++) {
+            const randomIndex = Math.floor(Math.random() * char.length);
+            generatedPassword += char[randomIndex];
+        }
+
+        return generatedPassword;
+    };
 
     const handleRegister = async (e) => {
         e.preventDefault();
@@ -125,7 +141,15 @@ const Register = () => {
                                     type={showPassword ? "text" : "password"}
                                     placeholder="Create a password"
                                     value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    onChange={(e) => {
+                                        setPassword(e.target.value);
+                                        setSuggestedPassword("");
+                                    }}
+                                    onFocus={() => {
+                                        if (!password) {
+                                            setSuggestedPassword(generatePassword());
+                                        }
+                                    }}
                                     className="w-full bg-[#080b1a] border border-gray-700 rounded-xl px-4 py-3.5 pr-12 text-white placeholder-gray-600 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/10 transition"
                                 />
 
@@ -142,6 +166,32 @@ const Register = () => {
                                 </button>
 
                             </div>
+
+                            {/* Suggested Password */}
+                            {suggestedPassword && (
+                                <div className="mt-3 p-3 bg-[#080b1a] border border-purple-500/30 rounded-xl">
+
+                                    <p className="text-xs text-gray-400 mb-1">
+                                        Suggested password
+                                    </p>
+
+                                    <p className="text-sm text-purple-400 break-all">
+                                        {suggestedPassword}
+                                    </p>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setPassword(suggestedPassword);
+                                            setSuggestedPassword("");
+                                        }}
+                                       className="mt-2 text-sm text-white hover:text-gray-300"                       >
+                                        Use this password
+                                    </button>
+
+                                </div>
+                            )}
+
                         </div>
 
                         {/* Register Button */}
