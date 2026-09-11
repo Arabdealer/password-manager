@@ -24,7 +24,7 @@ app.use(bodyparser.json());
 app.use(cookieParser());
 
 app.use(cors({
-    origin:  'https://password-manager-ten-virid.vercel.app',
+    origin: "https://password-manager-ten-virid.vercel.app",
     credentials: true
 }));
 
