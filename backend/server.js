@@ -122,7 +122,7 @@ app.post('/login', async (req, res) => {
 
     res.cookie('token', token, {
         httpOnly: true,
-        sameSite: 'lax',
+        sameSite: 'none',
         secure: true
         ,
         maxAge: 60 * 60 * 1000
@@ -144,7 +144,7 @@ app.post('/login', async (req, res) => {
 app.post("/logout", (req, res) => {
     res.clearCookie("token", {
         httpOnly: true,
-        sameSite: "lax",
+        sameSite: "none",
         secure: true
     });
 
