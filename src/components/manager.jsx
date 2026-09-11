@@ -8,7 +8,7 @@ const Manager = ({ passwords, setPasswords }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const getPasswords = async () => {
-    const response = await fetch("http://localhost:3000/", {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/`, {
       credentials: "include",
     });
     const data = await response.json();
@@ -30,7 +30,7 @@ const Manager = ({ passwords, setPasswords }) => {
       username,
       password,
     };
-    const response = await fetch("http://localhost:3000/", {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/`, {
       method: "POST",
       credentials: "include",
       headers: {

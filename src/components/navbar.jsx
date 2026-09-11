@@ -36,7 +36,7 @@ const Navbar = ({ authenticated, setAuthenticated }) => {
     const handleLogout = async () => {
         try {
             const response = await fetch(
-                "http://localhost:3000/logout",
+                `${import.meta.env.VITE_API_URL}/logout`,
                 {
                     method: "POST",
                     credentials: "include",

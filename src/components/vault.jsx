@@ -44,7 +44,7 @@ const Vault = ({ passwords, setPasswords }) => {
         }, 1500);
     };
     const getPasswords = async () => {
-  const response = await fetch("http://localhost:3000/", {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/`, {
     credentials: "include",
   });
   const data = await response.json();
@@ -57,7 +57,7 @@ useEffect(() => {
 
     // Delete password
     const deletePassword = async (id) => {
-        await fetch("http://localhost:3000/", {
+        await fetch(`${import.meta.env.VITE_API_URL}/`, {
             method: "DELETE",
             credentials: "include",
             headers: {
@@ -95,7 +95,7 @@ useEffect(() => {
     password: editPassword,
   };
 
-  const response = await fetch("http://localhost:3000/", {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/`, {
     method: "PUT",
     credentials: "include",
     headers: {
