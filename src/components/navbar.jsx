@@ -84,12 +84,12 @@ const Navbar = ({ authenticated, setAuthenticated }) => {
                     <div className="hidden md:flex items-center gap-4">
 
                         {/* About */}
-                        <link
+                        <Link
                             href="/#about"
                             className="px-4 py-2.5 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition duration-200"
                         >
                             About
-                        </link>
+                        </Link>
 
                         {/* Login */}
                         <Link
