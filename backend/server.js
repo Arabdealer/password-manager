@@ -24,7 +24,7 @@ app.use(bodyparser.json());
 app.use(cookieParser());
 
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin:  'https://password-manager-arab3.vercel.app',
     credentials: true
 }));
 
@@ -114,7 +114,8 @@ app.post('/login', async (req, res) => {
     res.cookie('token', token, {
         httpOnly: true,
         sameSite: 'lax',
-        secure: false,
+        secure: true
+        ,
         maxAge: 60 * 60 * 1000
     });
 
@@ -135,7 +136,7 @@ app.post("/logout", (req, res) => {
     res.clearCookie("token", {
         httpOnly: true,
         sameSite: "lax",
-        secure: false
+        secure: true
     });
 
     res.json({
