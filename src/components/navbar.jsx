@@ -6,32 +6,12 @@ import {
     Search,
     Vault
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const Navbar = ({ authenticated, setAuthenticated }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const navigate = useNavigate();
-
-    // useEffect(() => {
-    //     const checkAuth = async () => {
-    //         try {
-    //             const response = await fetch(
-    //                 "http://localhost:3000/auth/me",
-    //                 {
-    //                     credentials: "include",
-    //                 }
-    //             );
-
-    //             setAuthenticated(response.ok);
-    //         } catch (error) {
-    //             console.error("Authentication check failed:", error);
-    //             setAuthenticated(false);
-    //         }
-    //     };
-
-    //     checkAuth();
-    // }, []);
 
     const handleLogout = async () => {
         try {
@@ -78,6 +58,7 @@ const Navbar = ({ authenticated, setAuthenticated }) => {
                     </div>
                 </Link>
 
+
                 {/* LOGGED OUT NAVBAR */}
 
                 {!authenticated && (
@@ -85,7 +66,7 @@ const Navbar = ({ authenticated, setAuthenticated }) => {
 
                         {/* About */}
                         <Link
-                            href="/#about"
+                            to="/#about"
                             className="px-4 py-2.5 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition duration-200"
                         >
                             About
@@ -102,10 +83,19 @@ const Navbar = ({ authenticated, setAuthenticated }) => {
                     </div>
                 )}
 
+
                 {/* LOGGED IN NAVBAR */}
 
                 {authenticated && (
                     <div className="hidden md:flex items-center gap-4">
+
+                        {/* About */}
+                        <Link
+                            to="/#about"
+                            className="px-4 py-2.5 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition duration-200"
+                        >
+                            About
+                        </Link>
 
                         {/* Home */}
                         <Link
@@ -149,7 +139,10 @@ const Navbar = ({ authenticated, setAuthenticated }) => {
 
                     </div>
                 )}
+
+
                 {/* MOBILE MENU BUTTON */}
+
                 {authenticated && (
                     <button
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -161,9 +154,20 @@ const Navbar = ({ authenticated, setAuthenticated }) => {
 
             </div>
 
+
             {/* MOBILE LOGGED IN MENU */}
+
             {authenticated && isMenuOpen && (
                 <div className="md:hidden px-6 pb-5 space-y-3">
+
+                    {/* About */}
+                    <Link
+                        to="/#about"
+                        onClick={() => setIsMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-white/5"
+                    >
+                        About
+                    </Link>
 
                     {/* Home */}
                     <Link
