@@ -18,7 +18,7 @@
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "https://password-manager-ten-virid.vercel.app"
+          "value": "https://password-manager-arab3.vercel.app"
         },
         {
           "key": "Access-Control-Allow-Credentials",
