@@ -24,8 +24,17 @@ app.use(bodyparser.json());
 app.use(cookieParser());
 
 app.use(cors({
-    origin: "https://password-manager-ten-virid.vercel.app",
-    credentials: true
+    origin: true,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type"]
+}));
+
+app.options("*", cors({
+    origin: true,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type"]
 }));
 
 // REGISTER USER
