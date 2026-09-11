@@ -67,12 +67,7 @@ app.post('/register', async (req, res) => {
 });
 // LOGIN USER
 app.post('/login', async (req, res) => {
-    app.get("/auth/me", authenticateToken, async (req, res) => {
-    res.json({
-        authenticated: true,
-        user: req.user
-    });
-});
+   
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -128,6 +123,14 @@ app.post('/login', async (req, res) => {
         message: 'Login successful'
     });
 });
+
+ app.get("/auth/me", authenticateToken, async (req, res) => {
+    res.json({
+        authenticated: true,
+        user: req.user
+    });
+});
+
 app.post("/logout", (req, res) => {
     res.clearCookie("token", {
         httpOnly: true,
@@ -140,6 +143,7 @@ app.post("/logout", (req, res) => {
         message: "Logged out successfully"
     });
 });
+
 // GET ALL PASSWORDS
 app.get('/', authenticateToken, async (req, res) => {
     const db = client.db(dbName);
@@ -217,7 +221,4 @@ app.put('/', authenticateToken, async (req, res) => {
 });
 
 // START SERVER
-
-app.listen(port, () => {
-    console.log(`Example app listening on http://localhost:${port}`);
-});
+module.exports = app;

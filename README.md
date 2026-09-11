@@ -38,6 +38,7 @@ A core part of Sentra is **user-level data isolation**. Each vault record is ass
 ### Password Generator
 - Random password generation during account registration
 - Combination of uppercase and lowercase letters
+- Numbers and special characters
 - Option to use the generated password or enter a custom password
 
 ### Frontend
