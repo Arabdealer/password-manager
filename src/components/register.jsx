@@ -9,6 +9,7 @@ const Register = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [suggestedPassword, setSuggestedPassword] = useState("");
+    const [pin, setPin] = useState("");
 
     const navigate = useNavigate();
 
@@ -30,8 +31,13 @@ const Register = () => {
     const handleRegister = async (e) => {
         e.preventDefault();
 
-        if (!name || !email || !password) {
+        if (!name || !email || !password || !pin) {
             toast.error("Please fill in all fields!");
+            return;
+        }
+
+        if (!/^\d{6}$/.test(pin)) {
+            toast.error("PIN must be exactly 6 digits!");
             return;
         }
 
@@ -45,6 +51,7 @@ const Register = () => {
                     name,
                     email,
                     password,
+                    pin,
                 }),
             });
 
@@ -192,6 +199,24 @@ const Register = () => {
                                 </div>
                             )}
 
+                        </div>
+
+                        {/* 6-Digit Vault PIN */}
+                        <div>
+                            <label htmlFor="vault-pin" className="block text-sm font-medium text-gray-300 mb-2">
+                                6-Digit Vault PIN
+                            </label>
+
+                            <input
+                                id="vault-pin"
+                                type="password"
+                                maxLength={6}
+                                autoComplete="off"
+                                placeholder="Enter 6-digit PIN (e.g. 123456)"
+                                value={pin}
+                                onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
+                                className="w-full bg-[#080b1a] border border-gray-700 rounded-xl px-4 py-3.5 text-white placeholder-gray-600 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/10 transition font-mono tracking-widest text-center"
+                            />
                         </div>
 
                         {/* Register Button */}

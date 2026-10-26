@@ -40,12 +40,19 @@ app.options("*", cors({
 // REGISTER USER
 
 app.post('/register', async (req, res) => {
-    const { name, email, password } = req.body;
+    const { name, email, password, pin } = req.body;
 
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !pin) {
         return res.status(400).json({
             success: false,
             message: 'All fields are required'
+        });
+    }
+
+    if (!/^\d{6}$/.test(pin)) {
+        return res.status(400).json({
+            success: false,
+            message: 'PIN must be exactly 6 digits'
         });
     }
 
@@ -62,11 +69,15 @@ app.post('/register', async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPin = await bcrypt.hash(pin, 10);
 
     await collection.insertOne({
         name,
         email,
-        password: hashedPassword
+        password: hashedPassword,
+        pin: hashedPin,
+        pinAttempts: 0,
+        lockoutUntil: null
     });
 
     res.status(201).json({

@@ -23,6 +23,85 @@ const Vault = ({ passwords, setPasswords }) => {
     const [editUsername, setEditUsername] = useState("");
     const [editPassword, setEditPassword] = useState("");
 
+    // PIN verification states
+    const [pinModalOpen, setPinModalOpen] = useState(false);
+    const [enteredPin, setEnteredPin] = useState("");
+    const [pendingAction, setPendingAction] = useState(null);
+    const [pinLoading, setPinLoading] = useState(false);
+    const [pinError, setPinError] = useState("");
+
+    const requestPin = (action) => {
+        setEnteredPin("");
+        setPinError("");
+        setPendingAction(() => action);
+        setPinModalOpen(true);
+    };
+
+    const handleVerifyPin = async (e) => {
+        if (e) e.preventDefault();
+        if (!enteredPin || !/^\d{6}$/.test(enteredPin)) {
+            setPinError("Please enter a valid 6-digit PIN");
+            return;
+        }
+
+        setPinLoading(true);
+        setPinError("");
+
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/verify-pin`, {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ pin: enteredPin }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setPinError(data.message || "Invalid PIN");
+                toast.error(data.message || "Invalid PIN");
+                setPinLoading(false);
+                return;
+            }
+
+            toast.success("PIN verified!");
+            setPinModalOpen(false);
+            setPinLoading(false);
+
+            if (pendingAction) {
+                pendingAction();
+                setPendingAction(null);
+            }
+        } catch (err) {
+            console.error(err);
+            setPinError("Failed to verify PIN. Please try again.");
+            toast.error("Failed to verify PIN.");
+            setPinLoading(false);
+        }
+    };
+
+    const handleTogglePassword = (item) => {
+        if (visiblePasswords[item._id]) {
+            togglePassword(item._id);
+        } else {
+            requestPin(() => togglePassword(item._id));
+        }
+    };
+
+    const handleCopyPassword = (password, id) => {
+        requestPin(() => copyPassword(password, id));
+    };
+
+    const handleOpenEditModal = (item) => {
+        requestPin(() => openEditModal(item));
+    };
+
+    const handleDeletePassword = (id) => {
+        requestPin(() => deletePassword(id));
+    };
+
     // Show / Hide password
     const togglePassword = (id) => {
         setVisiblePasswords((prev) => ({
@@ -235,7 +314,7 @@ useEffect(() => {
 
                                         {/* Show / Hide */}
                                         <button
-                                            onClick={() => togglePassword(item._id)}
+                                            onClick={() => handleTogglePassword(item)}
                                             className="p-2 text-gray-500 hover:text-purple-400 transition"
                                             title={
                                                 visiblePasswords[item._id]
@@ -253,7 +332,7 @@ useEffect(() => {
                                         {/* Copy */}
                                         <button
                                             onClick={() =>
-                                                copyPassword(item.password, item._id)
+                                                handleCopyPassword(item.password, item._id)
                                             }
                                             className="p-2 text-gray-500 hover:text-purple-400 transition"
                                             title="Copy password"
@@ -272,7 +351,7 @@ useEffect(() => {
 
                                         {/* Edit */}
                                         <button
-                                            onClick={() => openEditModal(item)}
+                                            onClick={() => handleOpenEditModal(item)}
                                             className="p-2.5 rounded-lg text-gray-500 hover:text-purple-400 hover:bg-purple-500/10 transition"
                                             title="Edit password"
                                         >
@@ -281,7 +360,7 @@ useEffect(() => {
 
                                         {/* Delete */}
                                         <button
-                                            onClick={() => deletePassword(item._id)}
+                                            onClick={() => handleDeletePassword(item._id)}
                                             className="p-2.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition"
                                             title="Delete password"
                                         >
@@ -418,6 +497,83 @@ useEffect(() => {
 
                     </div>
 
+                </div>
+            )}
+
+            {/* PIN Verification Modal */}
+            {pinModalOpen && (
+                <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center px-6 z-50">
+                    <div className="w-full max-w-sm bg-[#111528] border border-gray-800 rounded-2xl p-6 shadow-2xl">
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-purple-600/15 border border-purple-500/30 flex items-center justify-center">
+                                    <LockKeyhole size={20} className="text-purple-400" />
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-semibold">Enter Vault PIN</h2>
+                                    <p className="text-xs text-gray-400">Security verification required</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    setPinModalOpen(false);
+                                    setEnteredPin("");
+                                    setPinError("");
+                                    setPendingAction(null);
+                                }}
+                                className="p-1.5 text-gray-500 hover:text-white rounded-lg transition"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        {/* PIN Form */}
+                        <form onSubmit={handleVerifyPin} className="space-y-4">
+                            <div>
+                                <input
+                                    type="password"
+                                    maxLength={6}
+                                    autoFocus
+                                    autoComplete="off"
+                                    placeholder="••••••"
+                                    value={enteredPin}
+                                    onChange={(e) => {
+                                        setEnteredPin(e.target.value.replace(/\D/g, ""));
+                                        setPinError("");
+                                    }}
+                                    className="w-full bg-[#080b1a] border border-gray-700 rounded-xl px-4 py-3 text-white text-center font-mono tracking-widest text-lg outline-none focus:border-purple-500 transition"
+                                />
+                                {pinError && (
+                                    <p className="text-xs text-red-400 mt-2 text-center">
+                                        {pinError}
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setPinModalOpen(false);
+                                        setEnteredPin("");
+                                        setPinError("");
+                                        setPendingAction(null);
+                                    }}
+                                    className="flex-1 py-2.5 rounded-xl border border-gray-700 text-gray-300 hover:bg-white/5 text-sm transition"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={pinLoading || enteredPin.length !== 6}
+                                    className="flex-1 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-semibold text-sm transition shadow-lg shadow-purple-900/20"
+                                >
+                                    {pinLoading ? "Verifying..." : "Confirm PIN"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             )}
 
