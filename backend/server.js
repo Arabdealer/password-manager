@@ -152,6 +152,83 @@ app.post('/login', async (req, res) => {
     });
 });
 
+// VERIFY VAULT PIN
+app.post('/verify-pin', authenticateToken, async (req, res) => {
+    const { pin } = req.body;
+
+    if (!pin) {
+        return res.status(400).json({
+            success: false,
+            message: 'PIN is required'
+        });
+    }
+
+    const db = client.db(dbName);
+    const collection = db.collection('users');
+
+    const user = await collection.findOne({ _id: new ObjectId(req.user.id) });
+
+    if (!user) {
+        return res.status(404).json({
+            success: false,
+            message: 'User not found'
+        });
+    }
+
+    // 1. Check if user is locked out
+    if (user.lockoutUntil && new Date(user.lockoutUntil) > new Date()) {
+        const remainingMinutes = Math.ceil(
+            (new Date(user.lockoutUntil) - new Date()) / (60 * 1000)
+        );
+        return res.status(429).json({
+            success: false,
+            message: `Locked out. Try again in ${remainingMinutes} minute(s).`
+        });
+    }
+
+    // 2. Compare PIN against stored hash
+    const isMatch = await bcrypt.compare(pin, user.pin);
+
+    if (!isMatch) {
+        const attempts = (user.pinAttempts || 0) + 1;
+        let updateData = { pinAttempts: attempts };
+
+        // Lock out after 3 failed attempts for 2 minutes
+        if (attempts >= 3) {
+            updateData.lockoutUntil = new Date(Date.now() + 2 * 60 * 1000);
+            updateData.pinAttempts = 0;
+        }
+
+        await collection.updateOne(
+            { _id: new ObjectId(req.user.id) },
+            { $set: updateData }
+        );
+
+        if (attempts >= 3) {
+            return res.status(429).json({
+                success: false,
+                message: 'Account locked for 2 minutes due to 3 failed attempts.'
+            });
+        }
+
+        return res.status(401).json({
+            success: false,
+            message: `Incorrect PIN. ${3 - attempts} attempt(s) remaining.`
+        });
+    }
+
+    // 3. Reset on success
+    await collection.updateOne(
+        { _id: new ObjectId(req.user.id) },
+        { $set: { pinAttempts: 0, lockoutUntil: null } }
+    );
+
+    res.json({
+        success: true,
+        message: 'PIN verified successfully'
+    });
+});
+
 app.post("/logout", (req, res) => {
     res.clearCookie("token", {
         httpOnly: true,
