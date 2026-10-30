@@ -71,7 +71,7 @@ const Vault = ({ passwords, setPasswords }) => {
             setPinLoading(false);
 
             if (pendingAction) {
-                pendingAction();
+                pendingAction(enteredPin);
                 setPendingAction(null);
             }
         } catch (err) {
@@ -99,7 +99,7 @@ const Vault = ({ passwords, setPasswords }) => {
     };
 
     const handleDeletePassword = (id) => {
-        requestPin(() => deletePassword(id));
+        requestPin((pin) => deletePassword(id, pin));
     };
 
     // Show / Hide password
@@ -134,20 +134,31 @@ useEffect(() => {
   getPasswords();
 }, []);
 
-    // Delete password
-    const deletePassword = async (id) => {
-        await fetch(`${import.meta.env.VITE_API_URL}/`, {
-            method: "DELETE",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ _id: id }),
-        });
+    // Delete password (sends PIN to backend for authorization)
+    const deletePassword = async (id, pin) => {
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/`, {
+                method: "DELETE",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ _id: id, pin }),
+            });
 
-        await getPasswords();
+            const data = await response.json();
 
-        toast.error("Password deleted!");
+            if (!response.ok) {
+                toast.error(data.message || "Failed to delete password");
+                return;
+            }
+
+            await getPasswords();
+            toast.success("Password deleted securely!");
+        } catch (err) {
+            console.error(err);
+            toast.error("Failed to delete password");
+        }
     };
 
     // Open edit modal
@@ -502,17 +513,20 @@ useEffect(() => {
 
             {/* PIN Verification Modal */}
             {pinModalOpen && (
-                <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center px-6 z-50">
-                    <div className="w-full max-w-sm bg-[#111528] border border-gray-800 rounded-2xl p-6 shadow-2xl">
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center px-4 z-50 animate-in fade-in duration-200">
+                    <div className="w-full max-w-sm bg-[#0f1325] border border-gray-800 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+                        {/* Decorative top accent gradient */}
+                        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-purple-500 to-transparent" />
+
                         {/* Modal Header */}
-                        <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-start justify-between mb-5">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-purple-600/15 border border-purple-500/30 flex items-center justify-center">
+                                <div className="w-10 h-10 rounded-xl bg-purple-600/15 border border-purple-500/30 flex items-center justify-center shadow-[0_0_15px_rgba(168,85,247,0.2)]">
                                     <LockKeyhole size={20} className="text-purple-400" />
                                 </div>
                                 <div>
-                                    <h2 className="text-lg font-semibold">Enter Vault PIN</h2>
-                                    <p className="text-xs text-gray-400">Security verification required</p>
+                                    <h2 className="text-lg font-bold text-white tracking-tight">Security Check</h2>
+                                    <p className="text-xs text-gray-400">Vault authorization required</p>
                                 </div>
                             </div>
                             <button
@@ -522,7 +536,7 @@ useEffect(() => {
                                     setPinError("");
                                     setPendingAction(null);
                                 }}
-                                className="p-1.5 text-gray-500 hover:text-white rounded-lg transition"
+                                className="p-1.5 text-gray-500 hover:text-white hover:bg-white/5 rounded-lg transition"
                             >
                                 <X size={18} />
                             </button>
@@ -530,27 +544,57 @@ useEffect(() => {
 
                         {/* PIN Form */}
                         <form onSubmit={handleVerifyPin} className="space-y-4">
+                            {/* Visual 6-Digit PIN Boxes */}
+                            <div className="flex justify-center gap-2 my-2">
+                                {[0, 1, 2, 3, 4, 5].map((index) => {
+                                    const isFilled = enteredPin.length > index;
+                                    const isCurrent = enteredPin.length === index;
+                                    return (
+                                        <div
+                                            key={index}
+                                            className={`w-9 h-11 rounded-lg border flex items-center justify-center text-lg font-semibold transition-all duration-200 ${
+                                                isFilled
+                                                    ? "border-purple-500 bg-purple-500/20 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.3)] scale-105"
+                                                    : isCurrent
+                                                    ? "border-purple-500/60 bg-[#080b1a] text-gray-400 ring-2 ring-purple-500/20"
+                                                    : "border-gray-800 bg-[#080b1a] text-gray-600"
+                                            }`}
+                                        >
+                                            {isFilled ? "•" : ""}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Standardized Input with matching placeholder font */}
                             <div>
                                 <input
                                     type="password"
                                     maxLength={6}
                                     autoFocus
                                     autoComplete="off"
-                                    placeholder="••••••"
+                                    placeholder="Enter 6-digit vault PIN"
                                     value={enteredPin}
                                     onChange={(e) => {
                                         setEnteredPin(e.target.value.replace(/\D/g, ""));
                                         setPinError("");
                                     }}
-                                    className="w-full bg-[#080b1a] border border-gray-700 rounded-xl px-4 py-3 text-white text-center font-mono tracking-widest text-lg outline-none focus:border-purple-500 transition"
+                                    className="w-full bg-[#080b1a] border border-gray-700/80 rounded-xl px-4 py-3 text-white placeholder-gray-500 text-center font-sans text-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition"
                                 />
+
+                                <div className="flex items-center justify-between text-[11px] text-gray-500 mt-2 px-1">
+                                    <span>Lockout: 3 attempts</span>
+                                    <span>{enteredPin.length} / 6 digits</span>
+                                </div>
+
                                 {pinError && (
-                                    <p className="text-xs text-red-400 mt-2 text-center">
+                                    <div className="text-xs text-red-400 mt-2.5 text-center bg-red-500/10 border border-red-500/20 py-2 px-3 rounded-lg">
                                         {pinError}
-                                    </p>
+                                    </div>
                                 )}
                             </div>
 
+                            {/* Buttons */}
                             <div className="flex gap-3 pt-2">
                                 <button
                                     type="button"
@@ -560,16 +604,16 @@ useEffect(() => {
                                         setPinError("");
                                         setPendingAction(null);
                                     }}
-                                    className="flex-1 py-2.5 rounded-xl border border-gray-700 text-gray-300 hover:bg-white/5 text-sm transition"
+                                    className="flex-1 py-2.5 rounded-xl border border-gray-700 text-gray-300 hover:bg-white/5 font-medium text-sm transition"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={pinLoading || enteredPin.length !== 6}
-                                    className="flex-1 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-semibold text-sm transition shadow-lg shadow-purple-900/20"
+                                    className="flex-1 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-sm transition shadow-lg shadow-purple-900/25"
                                 >
-                                    {pinLoading ? "Verifying..." : "Confirm PIN"}
+                                    {pinLoading ? "Verifying..." : "Authorize"}
                                 </button>
                             </div>
                         </form>

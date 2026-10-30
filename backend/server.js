@@ -87,7 +87,7 @@ app.post('/register', async (req, res) => {
 });
 // LOGIN USER
 app.post('/login', async (req, res) => {
-   
+
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -145,89 +145,89 @@ app.post('/login', async (req, res) => {
     });
 });
 
- app.get("/auth/me", authenticateToken, async (req, res) => {
+app.get("/auth/me", authenticateToken, async (req, res) => {
     res.json({
         authenticated: true,
         user: req.user
     });
 });
 
-// VERIFY VAULT PIN
-app.post('/verify-pin', authenticateToken, async (req, res) => {
-    const { pin } = req.body;
-
+//  Reusable function PIN Verification & Lockout Logic
+async function verifyUserPin(userId, pin) {
     if (!pin) {
-        return res.status(400).json({
-            success: false,
-            message: 'PIN is required'
-        });
+        return { success: false, status: 400, message: 'PIN is required' };
     }
 
     const db = client.db(dbName);
-    const collection = db.collection('users');
-
-    const user = await collection.findOne({ _id: new ObjectId(req.user.id) });
+    const users = db.collection('users');
+    const user = await users.findOne({ _id: new ObjectId(userId) });
 
     if (!user) {
-        return res.status(404).json({
-            success: false,
-            message: 'User not found'
-        });
+        return { success: false, status: 404, message: 'User not found' };
     }
 
-    // 1. Check if user is locked out
+    // 1. Check if user is currently locked out
     if (user.lockoutUntil && new Date(user.lockoutUntil) > new Date()) {
         const remainingMinutes = Math.ceil(
             (new Date(user.lockoutUntil) - new Date()) / (60 * 1000)
         );
-        return res.status(429).json({
+        return {
             success: false,
+            status: 429,
             message: `Locked out. Try again in ${remainingMinutes} minute(s).`
-        });
+        };
     }
 
-    // 2. Compare PIN against stored hash
+    // 2. Check if PIN matches
     const isMatch = await bcrypt.compare(pin, user.pin);
 
     if (!isMatch) {
         const attempts = (user.pinAttempts || 0) + 1;
         let updateData = { pinAttempts: attempts };
 
-        // Lock out after 3 failed attempts for 2 minutes
         if (attempts >= 3) {
             updateData.lockoutUntil = new Date(Date.now() + 2 * 60 * 1000);
             updateData.pinAttempts = 0;
         }
 
-        await collection.updateOne(
-            { _id: new ObjectId(req.user.id) },
+        await users.updateOne(
+            { _id: new ObjectId(userId) },
             { $set: updateData }
         );
 
         if (attempts >= 3) {
-            return res.status(429).json({
+            return {
                 success: false,
+                status: 429,
                 message: 'Account locked for 2 minutes due to 3 failed attempts.'
-            });
+            };
         }
 
-        return res.status(401).json({
+        return {
             success: false,
+            status: 401,
             message: `Incorrect PIN. ${3 - attempts} attempt(s) remaining.`
-        });
+        };
     }
 
-    // 3. Reset on success
-    await collection.updateOne(
-        { _id: new ObjectId(req.user.id) },
+    // 3. Reset attempts on success
+    await users.updateOne(
+        { _id: new ObjectId(userId) },
         { $set: { pinAttempts: 0, lockoutUntil: null } }
     );
 
-    res.json({
-        success: true,
-        message: 'PIN verified successfully'
-    });
+    return { success: true };
+}
+
+// VERIFY VAULT PIN
+app.post('/verify-pin', authenticateToken, async (req, res) => {
+    const result = await verifyUserPin(req.user.id, req.body.pin);
+    if (!result.success) {
+        return res.status(result.status).json({ success: false, message: result.message });
+    }
+    res.json({ success: true, message: 'PIN verified successfully' });
 });
+
 
 app.post("/logout", (req, res) => {
     res.clearCookie("token", {
@@ -276,11 +276,20 @@ app.post('/', authenticateToken, async (req, res) => {
 // DELETE A PASSWORD
 
 app.delete('/', authenticateToken, async (req, res) => {
+    const { _id, pin } = req.body;
+
+    const pinCheck = await verifyUserPin(req.user.id, pin);
+    if (!pinCheck.success) {
+        return res.status(pinCheck.status).json({
+            success: false,
+            message: pinCheck.message
+        });
+    }
     const db = client.db(dbName);
     const collection = db.collection('passwords');
 
     const result = await collection.deleteOne({
-        _id: new ObjectId(req.body._id),
+        _id: new ObjectId(_id),
         userId: req.user.id
     });
 
