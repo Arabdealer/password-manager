@@ -11,8 +11,9 @@ import {
     X,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { decryptPassword, encryptPassword } from "../utils/crypto";
 
-const Vault = ({ passwords, setPasswords }) => {
+const Vault = ({ passwords, setPasswords , encryptionKey }) => {
     const [search, setSearch] = useState("");
     const [visiblePasswords, setVisiblePasswords] = useState({});
     const [copiedId, setCopiedId] = useState(null);
@@ -22,6 +23,7 @@ const Vault = ({ passwords, setPasswords }) => {
     const [editWebsite, setEditWebsite] = useState("");
     const [editUsername, setEditUsername] = useState("");
     const [editPassword, setEditPassword] = useState("");
+    const [editPin, setEditPin] = useState("");
 
     // PIN verification states
     const [pinModalOpen, setPinModalOpen] = useState(false);
@@ -37,6 +39,24 @@ const Vault = ({ passwords, setPasswords }) => {
         setPinModalOpen(true);
     };
 
+    // Helper: Safely unlock a saved password
+    const decryptItem = async (item) => {
+        if (!encryptionKey) {
+            toast.error("Vault is locked. Please log in again to unlock your passwords.");
+            return null;
+        }
+        if (!item.ciphertext || !item.iv) {
+            toast.error("Unable to load this password.");
+            return null;
+        }
+        try {
+            return await decryptPassword(item.ciphertext, item.iv, encryptionKey);
+        } catch (err) {
+            console.error("Unlock error:", err);
+            toast.error("Could not unlock password. Please try again.");
+            return null;
+        }
+    };
     const handleVerifyPin = async (e) => {
         if (e) e.preventDefault();
         if (!enteredPin || !/^\d{6}$/.test(enteredPin)) {
@@ -84,32 +104,54 @@ const Vault = ({ passwords, setPasswords }) => {
 
     const handleTogglePassword = (item) => {
         if (visiblePasswords[item._id]) {
-            togglePassword(item._id);
+            setVisiblePasswords((prev) => {
+                const updated = { ...prev };
+                delete updated[item._id];
+                return updated;
+            });
         } else {
-            requestPin(() => togglePassword(item._id));
+            requestPin(async () => {
+                const unlocked = await decryptItem(item);
+                if (unlocked !== null) {
+                    setVisiblePasswords((prev) => ({
+                        ...prev,
+                        [item._id]: unlocked,
+                    }));
+                }
+            });
         }
     };
 
-    const handleCopyPassword = (password, id) => {
-        requestPin(() => copyPassword(password, id));
+    const handleCopyPassword = (item) => {
+        requestPin(async () => {
+            const unlocked = await decryptItem(item);
+            if (unlocked !== null) {
+                await navigator.clipboard.writeText(unlocked);
+                setCopiedId(item._id);
+                toast.success("Password copied!");
+                setTimeout(() => {
+                    setCopiedId(null);
+                }, 1500);
+            }
+        });
     };
 
     const handleOpenEditModal = (item) => {
-        requestPin(() => openEditModal(item));
+        requestPin(async (pin) => {
+            const unlocked = await decryptItem(item);
+            if (unlocked !== null) {
+                setEditPin(pin);
+                setEditingId(item._id);
+                setEditWebsite(item.website);
+                setEditUsername(item.username);
+                setEditPassword(unlocked);
+            }
+        });
     };
 
     const handleDeletePassword = (id) => {
         requestPin((pin) => deletePassword(id, pin));
     };
-
-    // Show / Hide password
-    const togglePassword = (id) => {
-        setVisiblePasswords((prev) => ({
-            ...prev,
-            [id]: !prev[id],
-        }));
-    };
-
     // Copy password
     const copyPassword = async (password, id) => {
         await navigator.clipboard.writeText(password);
@@ -173,37 +215,56 @@ useEffect(() => {
 
     // Save edited password
    const saveEdit = async () => {
-  if (!editWebsite || !editUsername || !editPassword) {
-    toast.error("Please fill all fields!");
-    return;
-  }
+        if (!editWebsite || !editUsername || !editPassword) {
+            toast.error("Please fill all fields!");
+            return;
+        }
 
-  const updatedPassword = {
-    _id: editingId,
-    website: editWebsite,
-    username: editUsername,
-    password: editPassword,
-  };
+        if (!encryptionKey) {
+            toast.error("Vault is locked. Please log in again to unlock your passwords.");
+            return;
+        }
 
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/`, {
-    method: "PUT",
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(updatedPassword),
-  });
+        try {
+            const { ciphertext, iv } = await encryptPassword(editPassword, encryptionKey);
 
-  const result = await response.json();
+            const updatedPassword = {
+                _id: editingId,
+                website: editWebsite,
+                username: editUsername,
+                ciphertext,
+                iv,
+                pin: editPin,
+            };
 
-  if (result.success) {
-    await getPasswords();
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/`, {
+                method: "PUT",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(updatedPassword),
+            });
 
-    setEditingId(null);
+            const result = await response.json();
 
-    toast.success("Password updated!");
-  }
-};
+            if (result.success) {
+                await getPasswords();
+                setEditingId(null);
+                setVisiblePasswords((prev) => {
+                    const updated = { ...prev };
+                    delete updated[editingId];
+                    return updated;
+                });
+                toast.success("Password updated!");
+            } else {
+                toast.error(result.message || "Failed to update password");
+            }
+        } catch (err) {
+            console.error("Save edit error:", err);
+            toast.error("Could not update password. Please try again.");
+        }
+    };
     // Search
     const filteredPasswords = passwords.filter((item) =>
         item.website.toLowerCase().includes(search.toLowerCase())
@@ -317,7 +378,7 @@ useEffect(() => {
 
                                             <span className="text-sm font-mono text-gray-300 truncate block">
                                                 {visiblePasswords[item._id]
-                                                    ? item.password
+                                                    ? visiblePasswords[item._id]
                                                     : "••••••••••••"}
                                             </span>
 
@@ -343,7 +404,7 @@ useEffect(() => {
                                         {/* Copy */}
                                         <button
                                             onClick={() =>
-                                                handleCopyPassword(item.password, item._id)
+                                                handleCopyPassword(item)
                                             }
                                             className="p-2 text-gray-500 hover:text-purple-400 transition"
                                             title="Copy password"

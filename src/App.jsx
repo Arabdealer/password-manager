@@ -13,6 +13,7 @@ import Register from "./components/register";
 function App() {
   const [passwords, setPasswords] = useState([]);
   const [authenticated, setAuthenticated] = useState(false);
+  const [encryptionKey, setEncryptionKey] = useState(null);
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -48,7 +49,8 @@ function App() {
         <Route
           path="/login"
           element={
-            <Login setAuthenticated={setAuthenticated} />
+            <Login setAuthenticated={setAuthenticated} 
+            setEncryptionKey={setEncryptionKey} />
           }
         />
         {/* Register */}

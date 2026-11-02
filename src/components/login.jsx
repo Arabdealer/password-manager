@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Eye, EyeOff, LockKeyhole } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { deriveKey } from "../utils/crypto";
 
 const Login = ({ setAuthenticated }) => {
     const [showPassword, setShowPassword] = useState(false);

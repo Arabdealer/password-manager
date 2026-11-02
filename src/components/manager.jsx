@@ -1,8 +1,9 @@
 import { Plus, LockKeyhole, Eye, EyeOff } from "lucide-react";
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
+import { encryptPassword } from "../utils/crypto";
 
-const Manager = ({ passwords, setPasswords }) => {
+const Manager = ({ passwords, setPasswords, encryptionKey }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [website, setWebsite] = useState("");
   const [username, setUsername] = useState("");
@@ -25,10 +26,17 @@ const Manager = ({ passwords, setPasswords }) => {
       toast.error("Please fill in all fields !");
       return;
     }
+    if (!encryptionKey) {
+      toast.error("Vault is locked. Please unlock your vault or log in again.");
+      return;
+    }
+
+    const { ciphertext, iv } = await encryptPassword(password, encryptionKey);
     const newPassword = {
       website,
       username,
-      password,
+      ciphertext,
+      iv,
     };
     const response = await fetch(`${import.meta.env.VITE_API_URL}/`, {
       method: "POST",

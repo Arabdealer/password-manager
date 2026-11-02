@@ -6,6 +6,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
+const crypto = require('crypto');
 
 const authenticateToken = require('./middleware/auth');
 
@@ -71,13 +72,16 @@ app.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const hashedPin = await bcrypt.hash(pin, 10);
 
+    const salt = crypto.randomBytes(16).toString('base64');
+
     await collection.insertOne({
         name,
         email,
         password: hashedPassword,
         pin: hashedPin,
         pinAttempts: 0,
-        lockoutUntil: null
+        lockoutUntil: null,
+        salt: salt
     });
 
     res.status(201).json({
@@ -141,7 +145,8 @@ app.post('/login', async (req, res) => {
 
     res.json({
         success: true,
-        message: 'Login successful'
+        message: 'Login successful',
+        salt: user.salt
     });
 });
 
@@ -302,7 +307,22 @@ app.delete('/', authenticateToken, async (req, res) => {
 
 // UPDATE A PASSWORD
 app.put('/', authenticateToken, async (req, res) => {
-    const { _id, website, username, password } = req.body;
+    const { _id, website, username, ciphertext, iv, pin } = req.body;
+
+    if (!website || !username || !ciphertext || !iv) {
+        return res.status(400).json({
+            success: false,
+            message: 'Website, username, ciphertext, and IV are required'
+        });
+    }
+
+    const pinCheck = await verifyUserPin(req.user.id, pin);
+    if (!pinCheck.success) {
+        return res.status(pinCheck.status).json({
+            success: false,
+            message: pinCheck.message
+        });
+    }
 
     const db = client.db(dbName);
     const collection = db.collection('passwords');
@@ -316,12 +336,13 @@ app.put('/', authenticateToken, async (req, res) => {
             $set: {
                 website,
                 username,
-                password
+                ciphertext,
+                iv
             }
         }
     );
 
-    res.send({
+    res.json({
         success: true,
         result: result
     });
