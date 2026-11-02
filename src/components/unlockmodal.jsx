@@ -62,8 +62,6 @@ const UnlockModal = ({ userSalt, setEncryptionKey, setAuthenticated }) => {
             <LockKeyhole size={28} className="text-purple-400" />
           </div>
         </div>
-
-        {/* Professional Header */}
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold tracking-tight text-white">
             Unlock Sentra Vault
@@ -122,3 +120,4 @@ const UnlockModal = ({ userSalt, setEncryptionKey, setAuthenticated }) => {
 };
 
 export default UnlockModal;
+

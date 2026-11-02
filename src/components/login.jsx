@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { deriveKey } from "../utils/crypto";
 
-const Login = ({ setAuthenticated }) => {
+const Login = ({ setAuthenticated ,setEncryptionKey }) => {
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -40,6 +40,10 @@ const Login = ({ setAuthenticated }) => {
 
             toast.success("Login successful!");
             setAuthenticated(true);
+             if (data.salt) {
+                const key = await deriveKey(password, data.salt);
+                setEncryptionKey(key);
+            }
             navigate("/home");
         } catch (error) {
             console.error(error);

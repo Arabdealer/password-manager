@@ -151,12 +151,20 @@ app.post('/login', async (req, res) => {
 });
 
 app.get("/auth/me", authenticateToken, async (req, res) => {
+    const db = client.db(dbName);
+    const users = db.collection('users');
+    const user = await users.findOne({ _id: new ObjectId(req.user.id) });
+
+    if (!user) {
+        return res.status(404).json({ authenticated: false, message: "User not found" });
+    }
+
     res.json({
         authenticated: true,
-        user: req.user
+        user: { id: user._id, email: user.email, name: user.name },
+        salt: user.salt
     });
 });
-
 //  Reusable function PIN Verification & Lockout Logic
 async function verifyUserPin(userId, pin) {
     if (!pin) {
