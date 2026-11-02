@@ -203,10 +203,38 @@ const Register = () => {
 
                         {/* 6-Digit Vault PIN */}
                         <div>
-                            <label htmlFor="vault-pin" className="block text-sm font-medium text-gray-300 mb-2">
-                                6-Digit Vault PIN
-                            </label>
+                            <div className="flex items-center justify-between mb-2">
+                                <label htmlFor="vault-pin" className="block text-sm font-medium text-gray-300">
+                                    6-Digit Vault PIN
+                                </label>
+                                <span className="text-xs text-purple-400 font-mono">
+                                    {pin.length}/6 digits
+                                </span>
+                            </div>
 
+                            {/* Visual 6-Digit PIN Indicators */}
+                            <div className="flex justify-center gap-2.5 mb-3">
+                                {[0, 1, 2, 3, 4, 5].map((index) => {
+                                    const isFilled = pin.length > index;
+                                    const isCurrent = pin.length === index;
+                                    return (
+                                        <div
+                                            key={index}
+                                            className={`w-10 h-11 rounded-xl border flex items-center justify-center text-lg font-bold transition-all duration-200 ${
+                                                isFilled
+                                                    ? "border-purple-500 bg-purple-500/20 text-purple-300 shadow-[0_0_12px_rgba(168,85,247,0.35)] scale-105"
+                                                    : isCurrent
+                                                    ? "border-purple-500/60 bg-[#080b1a] ring-2 ring-purple-500/20"
+                                                    : "border-gray-800 bg-[#080b1a] text-gray-600"
+                                            }`}
+                                        >
+                                            {isFilled ? "•" : ""}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Standardized Input matching email & password style */}
                             <input
                                 id="vault-pin"
                                 type="password"
@@ -215,7 +243,7 @@ const Register = () => {
                                 placeholder="Enter 6-digit PIN (e.g. 123456)"
                                 value={pin}
                                 onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-                                className="w-full bg-[#080b1a] border border-gray-700 rounded-xl px-4 py-3.5 text-white placeholder-gray-600 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/10 transition font-mono tracking-widest text-center"
+                                className="w-full bg-[#080b1a] border border-gray-700 rounded-xl px-4 py-3.5 text-white placeholder-gray-600 text-center outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/10 transition text-sm tracking-wider"
                             />
                         </div>
 

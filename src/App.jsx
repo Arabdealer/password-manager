@@ -9,11 +9,14 @@ import Login from "./components/login";
 import Landing from "./components/landing";
 import ProtectedRoute from "./components/protectedroutes";
 import Register from "./components/register";
+import UnlockModal from "./components/unlockmodal";
 
 function App() {
   const [passwords, setPasswords] = useState([]);
   const [authenticated, setAuthenticated] = useState(false);
   const [encryptionKey, setEncryptionKey] = useState(null);
+  const [userSalt, setUserSalt] = useState(null);
+
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -21,7 +24,15 @@ function App() {
           credentials: "include",
         });
 
-        setAuthenticated(response.ok);
+        if (response.ok) {
+          const data = await response.json();
+          setAuthenticated(true);
+          if (data.salt) {
+            setUserSalt(data.salt);
+          }
+        } else {
+          setAuthenticated(false);
+        }
       } catch (error) {
         console.error("Authentication check failed:", error);
         setAuthenticated(false);
@@ -41,7 +52,6 @@ function App() {
       />
 
       <Routes>
-
         {/* Public landing page */}
         <Route path="/" element={<Landing />} />
 
@@ -49,15 +59,15 @@ function App() {
         <Route
           path="/login"
           element={
-            <Login setAuthenticated={setAuthenticated} 
-            setEncryptionKey={setEncryptionKey} />
+            <Login
+              setAuthenticated={setAuthenticated}
+              setEncryptionKey={setEncryptionKey}
+            />
           }
         />
+
         {/* Register */}
-        <Route
-          path="/register"
-          element={<Register />}
-        />
+        <Route path="/register" element={<Register />} />
 
         {/* Protected Home / Manager */}
         <Route
@@ -67,6 +77,8 @@ function App() {
               <Manager
                 passwords={passwords}
                 setPasswords={setPasswords}
+                encryptionKey={encryptionKey}
+                setEncryptionKey={setEncryptionKey}
               />
             </ProtectedRoute>
           }
@@ -80,12 +92,22 @@ function App() {
               <Vault
                 passwords={passwords}
                 setPasswords={setPasswords}
+                encryptionKey={encryptionKey}
+                setEncryptionKey={setEncryptionKey}
               />
             </ProtectedRoute>
           }
         />
-
       </Routes>
+
+      {/* Unlock Vault Modal if session is active but encryption key is not loaded */}
+      {authenticated && !encryptionKey && (
+        <UnlockModal
+          userSalt={userSalt}
+          setEncryptionKey={setEncryptionKey}
+          setAuthenticated={setAuthenticated}
+        />
+      )}
     </BrowserRouter>
   );
 }
