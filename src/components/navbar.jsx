@@ -1,30 +1,20 @@
-import React from "react";
-import { Link, useNavigate } from "react-router-dom";
-import {
-    LockKeyhole,
-    Home,
-    Search,
-    Vault
-} from "lucide-react";
-import { useState } from "react";
+import React, { useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { LockKeyhole, KeyRound, Vault as VaultIcon, LogOut, Menu, X, Info } from "lucide-react";
 
 const Navbar = ({ authenticated, setAuthenticated }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-
     const navigate = useNavigate();
+    const location = useLocation();
 
     const handleLogout = async () => {
         try {
-            const response = await fetch(
-                `${import.meta.env.VITE_API_URL}/logout`,
-                {
-                    method: "POST",
-                    credentials: "include",
-                }
-            );
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/logout`, {
+                method: "POST",
+                credentials: "include",
+            });
 
             const data = await response.json();
-
             if (data.success) {
                 setAuthenticated(false);
                 setIsMenuOpen(false);
@@ -35,185 +25,154 @@ const Navbar = ({ authenticated, setAuthenticated }) => {
         }
     };
 
+    const isActive = (path) => location.pathname === path;
+
     return (
-        <nav className="bg-[#080b1a] text-white shadow-lg border-b border-purple-900/30">
-
-            <div className="max-w-7xl mx-auto px-6 md:px-10 py-4 flex items-center justify-between">
-
-                {/* Logo */}
+        <nav className="sticky top-0 z-40 bg-[#0d1124] border-b border-purple-500/20 text-white shadow-lg shadow-black/20">
+            <div className="max-w-7xl mx-auto px-6 md:px-10 h-18 flex items-center justify-between">
+                {/* Brand Logo */}
                 <Link
                     to="/"
-                    className="flex items-center gap-3"
+                    className="flex items-center gap-3 group"
                     onClick={() => setIsMenuOpen(false)}
                 >
-                    <div className="w-10 h-10 rounded-xl bg-purple-600/20 border border-purple-400/40 flex items-center justify-center">
-                        <LockKeyhole
-                            className="text-purple-400"
-                            size={22}
-                        />
+                    <div className="w-10 h-10 rounded-xl bg-purple-600/25 border border-purple-500/40 flex items-center justify-center group-hover:border-purple-400 transition shadow-[0_0_15px_rgba(168,85,247,0.3)]">
+                        <LockKeyhole className="text-purple-400 group-hover:scale-110 transition duration-200" size={20} />
                     </div>
-
-                    <div className="text-2xl font-bold tracking-tight">
-                        Sentra
+                    <div className="flex flex-col">
+                        <span className="text-xl font-bold tracking-tight text-white group-hover:text-purple-300 transition">
+                            Sentra
+                        </span>
                     </div>
                 </Link>
 
-
-                {/* LOGGED OUT NAVBAR */}
-
-                {!authenticated && (
-                    <div className="hidden md:flex items-center gap-4">
-
-                        {/* About */}
-                        <Link
-                            to="/#about"
-                            className="px-4 py-2.5 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition duration-200"
-                        >
-                            About
-                        </Link>
-
-                        {/* Login */}
-                        <Link
-                            to="/login"
-                            className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold transition duration-200"
-                        >
-                            Login
-                        </Link>
-
-                    </div>
-                )}
-
-
-                {/* LOGGED IN NAVBAR */}
-
-                {authenticated && (
-                    <div className="hidden md:flex items-center gap-4">
-
-                        {/* About */}
-                        <Link
-                            to="/#about"
-                            className="px-4 py-2.5 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition duration-200"
-                        >
-                            About
-                        </Link>
-
-                        {/* Home */}
+                {/* Desktop Nav Items */}
+                {authenticated ? (
+                    <div className="hidden md:flex items-center gap-3">
                         <Link
                             to="/home"
-                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition duration-200"
+                            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition duration-200 ${
+                                isActive("/home")
+                                    ? "bg-purple-600/25 text-purple-200 border border-purple-500/40 shadow-[0_0_12px_rgba(168,85,247,0.25)]"
+                                    : "text-gray-300 hover:text-white hover:bg-white/5"
+                            }`}
                         >
-                            <Home size={18} />
-                            Home
+                            <KeyRound size={16} />
+                            Save Password
                         </Link>
 
-                        {/* Vault */}
                         <Link
                             to="/vault"
-                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition duration-200"
+                            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition duration-200 ${
+                                isActive("/vault")
+                                    ? "bg-purple-600/25 text-purple-200 border border-purple-500/40 shadow-[0_0_12px_rgba(168,85,247,0.25)]"
+                                    : "text-gray-300 hover:text-white hover:bg-white/5"
+                            }`}
                         >
-                            <Vault size={18} />
-                            Vault
+                            <VaultIcon size={16} />
+                            Your Vault
                         </Link>
 
-                        {/* Search */}
-                        <div className="flex items-center gap-3 bg-[#111528] border border-gray-700/50 rounded-xl px-4 py-2.5 focus-within:border-purple-500/60 transition duration-200">
-                            <Search
-                                size={19}
-                                className="text-gray-400"
-                            />
+                        <div className="h-5 w-px bg-gray-700 mx-2" />
 
-                            <input
-                                type="text"
-                                placeholder="Search vault..."
-                                className="bg-transparent outline-none text-sm text-white placeholder-gray-500 w-52"
-                            />
-                        </div>
-
-                        {/* Logout */}
                         <button
                             onClick={handleLogout}
-                            className="px-4 py-2.5 rounded-xl text-gray-300 hover:text-white hover:bg-purple-600/20 transition duration-200"
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-gray-400 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition duration-200"
                         >
-                            Logout
+                            <LogOut size={16} />
+                            Sign Out
                         </button>
-
+                    </div>
+                ) : (
+                    <div className="hidden md:flex items-center gap-4">
+                        <a
+                            href="/#about"
+                            className="text-sm text-gray-300 hover:text-white px-3 py-2 rounded-xl hover:bg-white/5 transition flex items-center gap-1.5"
+                        >
+                            <Info size={15} />
+                            About
+                        </a>
+                        <Link
+                            to="/login"
+                            className="text-sm text-gray-300 hover:text-white px-4 py-2 rounded-xl hover:bg-white/5 transition font-medium"
+                        >
+                            Sign In
+                        </Link>
+                        <Link
+                            to="/register"
+                            className="text-sm bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-medium px-5 py-2.5 rounded-xl shadow-lg shadow-purple-900/30 transition"
+                        >
+                            Create Vault
+                        </Link>
                     </div>
                 )}
 
-
-                {/* MOBILE MENU BUTTON */}
-
-                {authenticated && (
-                    <button
-                        onClick={() => setIsMenuOpen(!isMenuOpen)}
-                        className="md:hidden text-gray-300 hover:text-white"
-                    >
-                        <span className="text-2xl">☰</span>
-                    </button>
-                )}
-
+                {/* Mobile Menu Toggle */}
+                <button
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    className="md:hidden p-2 text-gray-400 hover:text-white"
+                >
+                    {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
+                </button>
             </div>
 
-
-            {/* MOBILE LOGGED IN MENU */}
-
-            {authenticated && isMenuOpen && (
-                <div className="md:hidden px-6 pb-5 space-y-3">
-
-                    {/* About */}
-                    <Link
-                        to="/#about"
-                        onClick={() => setIsMenuOpen(false)}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-white/5"
-                    >
-                        About
-                    </Link>
-
-                    {/* Home */}
-                    <Link
-                        to="/home"
-                        onClick={() => setIsMenuOpen(false)}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-white/5"
-                    >
-                        <Home size={19} />
-                        Home
-                    </Link>
-
-                    {/* Vault */}
-                    <Link
-                        to="/vault"
-                        onClick={() => setIsMenuOpen(false)}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-white/5"
-                    >
-                        <Vault size={19} />
-                        Vault
-                    </Link>
-
-                    {/* Search */}
-                    <div className="flex items-center gap-3 bg-[#111528] border border-gray-700/50 rounded-xl px-4 py-3">
-                        <Search
-                            size={19}
-                            className="text-gray-400"
-                        />
-
-                        <input
-                            type="text"
-                            placeholder="Search vault..."
-                            className="bg-transparent outline-none text-sm text-white placeholder-gray-500 w-full"
-                        />
-                    </div>
-
-                    {/* Logout */}
-                    <button
-                        onClick={handleLogout}
-                        className="w-full text-left px-4 py-3 rounded-xl text-gray-300 hover:bg-white/5"
-                    >
-                        Logout
-                    </button>
-
+            {/* Mobile Dropdown */}
+            {isMenuOpen && (
+                <div className="md:hidden border-t border-purple-500/20 px-6 py-5 bg-[#0d1124] space-y-3">
+                    {authenticated ? (
+                        <>
+                            <Link
+                                to="/home"
+                                onClick={() => setIsMenuOpen(false)}
+                                className={`block px-4 py-3 rounded-xl text-sm font-medium ${
+                                    isActive("/home") ? "bg-purple-600/25 text-purple-200" : "text-gray-300"
+                                }`}
+                            >
+                                Save Password
+                            </Link>
+                            <Link
+                                to="/vault"
+                                onClick={() => setIsMenuOpen(false)}
+                                className={`block px-4 py-3 rounded-xl text-sm font-medium ${
+                                    isActive("/vault") ? "bg-purple-600/25 text-purple-200" : "text-gray-300"
+                                }`}
+                            >
+                                Your Vault
+                            </Link>
+                            <button
+                                onClick={handleLogout}
+                                className="w-full text-left px-4 py-3 rounded-xl text-sm font-medium text-red-400"
+                            >
+                                Sign Out
+                            </button>
+                        </>
+                    ) : (
+                        <div className="space-y-3 pt-2">
+                            <a
+                                href="/#about"
+                                onClick={() => setIsMenuOpen(false)}
+                                className="block px-4 py-3 rounded-xl text-sm font-medium text-gray-300"
+                            >
+                                About Sentra
+                            </a>
+                            <Link
+                                to="/login"
+                                onClick={() => setIsMenuOpen(false)}
+                                className="block w-full text-center px-4 py-3 rounded-xl text-sm font-medium border border-gray-700 text-white"
+                            >
+                                Sign In
+                            </Link>
+                            <Link
+                                to="/register"
+                                onClick={() => setIsMenuOpen(false)}
+                                className="block w-full text-center px-4 py-3 rounded-xl text-sm font-medium bg-purple-600 text-white"
+                            >
+                                Create Free Vault
+                            </Link>
+                        </div>
+                    )}
                 </div>
             )}
-
         </nav>
     );
 };

@@ -11,7 +11,7 @@ const UnlockModal = ({ userSalt, setEncryptionKey, setAuthenticated }) => {
   const handleUnlock = async (e) => {
     e.preventDefault();
     if (!unlockPassword) {
-      toast.error("Please enter your account password");
+      toast.error("Please enter your password");
       return;
     }
 
@@ -52,7 +52,7 @@ const UnlockModal = ({ userSalt, setEncryptionKey, setAuthenticated }) => {
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center px-4 z-50 animate-in fade-in duration-200">
-      <div className="w-full max-w-md bg-[#111528] border border-gray-800 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+      <div className="w-full max-w-md bg-[#101426] border border-gray-800 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
         {/* Subtle accent line */}
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-purple-500 to-transparent" />
 
@@ -62,12 +62,14 @@ const UnlockModal = ({ userSalt, setEncryptionKey, setAuthenticated }) => {
             <LockKeyhole size={28} className="text-purple-400" />
           </div>
         </div>
+
+        {/* Header */}
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold tracking-tight text-white">
             Unlock Sentra Vault
           </h2>
           <p className="text-gray-400 text-sm mt-2 leading-relaxed">
-            Your encryption session has expired for security. Please enter your account password to decrypt and access your saved credentials.
+            Your encryption session has expired for security. Please enter your password to unlock your saved credentials.
           </p>
         </div>
 
@@ -75,13 +77,13 @@ const UnlockModal = ({ userSalt, setEncryptionKey, setAuthenticated }) => {
         <form onSubmit={handleUnlock} className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Master Password
+              Password
             </label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
                 autoFocus
-                placeholder="Enter your master password"
+                placeholder="Enter your password"
                 value={unlockPassword}
                 onChange={(e) => setUnlockPassword(e.target.value)}
                 className="w-full bg-[#080b1a] border border-gray-700 rounded-xl px-4 py-3.5 pr-12 text-white placeholder-gray-600 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/10 transition text-sm"
@@ -101,7 +103,7 @@ const UnlockModal = ({ userSalt, setEncryptionKey, setAuthenticated }) => {
             disabled={loading || !unlockPassword}
             className="w-full bg-purple-600 hover:bg-purple-500 active:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3.5 rounded-xl transition duration-200 shadow-lg shadow-purple-900/25 flex items-center justify-center gap-2"
           >
-            {loading ? "Decrypting..." : "Unlock Vault"}
+            {loading ? "Unlocking..." : "Unlock Vault"}
           </button>
 
           <div className="text-center pt-1">
@@ -120,4 +122,3 @@ const UnlockModal = ({ userSalt, setEncryptionKey, setAuthenticated }) => {
 };
 
 export default UnlockModal;
-
